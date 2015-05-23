@@ -1,0 +1,12 @@
+2015-05-23 15:25:15,753    INFO    Starting new HTTPS connection (1): fr.wikipedia.org
+2015-05-23 15:25:26,861    WARNING    Connection error. Retrying in a moment.
+2015-05-23 15:25:26,862    DEBUG    Sleeping for 0 seconds
+2015-05-23 15:25:26,865    INFO    Starting new HTTPS connection (2): fr.wikipedia.org
+2015-05-23 15:25:37,964    WARNING    Connection error. Retrying in a moment.
+2015-05-23 15:25:37,964    DEBUG    Sleeping for 30 seconds
+2015-05-23 15:26:07,967    INFO    Starting new HTTPS connection (3): fr.wikipedia.org
+2015-05-23 15:26:19,387    WARNING    Connection error. Retrying in a moment.
+2015-05-23 15:26:19,388    DEBUG    Sleeping for 60 seconds
+2015-05-23 15:27:19,391    INFO    Starting new HTTPS connection (4): fr.wikipedia.org
+2015-05-23 15:27:19,394    WARNING    Connection error. Retrying in a moment.
+2015-05-23 15:27:19,394    DEBUG    Sleeping for 90 seconds
