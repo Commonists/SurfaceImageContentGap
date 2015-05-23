@@ -1,7 +1,7 @@
-#/usr/bin/python
+#!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-""" Surface image content gap. """
+"""Surface image content gap."""
 
 import logging
 
@@ -13,14 +13,14 @@ PROTOCOL = 'https'
 
 
 def isthereanimage(article):
-    """ Returns whether there is an image in the article or not. """
+    """Return whether there is an image in the article or not."""
     imagepattern = ["<gallery>", "File:", "Image:", ".jpg", ".JPG"]
     text = article.text()
     return any(pattern in text for pattern in imagepattern)
 
 
 def crawlcategory(language, category):
-    """ Crawls the category from a given wikipedia.
+    """Crawl the category from a given wikipedia.
 
     Args:
         language (str): language code of wikipedia
@@ -38,7 +38,7 @@ def crawlcategory(language, category):
 
 
 def setuplog():
-    """ Setting up the LOG. """
+    """Set up the LOG. """
     consolehandler = logging.StreamHandler()
     formatter = logging.Formatter(
         '%(asctime)s    %(levelname)s    %(message)s')
