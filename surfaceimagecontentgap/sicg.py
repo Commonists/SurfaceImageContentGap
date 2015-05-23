@@ -29,13 +29,12 @@ def crawlcategory(language, category):
     site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(language)))
     articles = [a for a in site.Categories[category.decode('utf-8')]]
     noimagearticles = []
+    LOG.info("Found %s articles", len(articles))
     for article in articles:
         LOG.debug("Analyzing %s", article.name)
         if not isthereanimage(article):
             noimagearticles.append(article)
-    LOG.info("""%s articles, %s article without image""",
-             len(articles),
-             len(noimagearticles))
+            LOG.debug("No image found in %s", article.name)
 
 
 def setuplog():
