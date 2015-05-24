@@ -6,17 +6,54 @@
 import logging
 
 import mwclient
+import requests
 
+
+# logger
 LOG = logging.getLogger()
+
+# Constants
 WIKIPEDIA_URL = '{0}.wikipedia.org'
 PROTOCOL = 'https'
+USER_AGENT = 'Bot based on mwclient'
+GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
 
 
 def isthereanimage(article):
-    """ Returns whether there is an image in the article or not. """
-    imagepattern = ["<gallery>", "File:", "Image:", ".jpg", ".JPG"]
+    """ Returns whether there is an image in the article or not."""
+    LOG.info("Analyzing: %s", article.name.encode('utf-8'))
+    imagepattern = ["<gallery>", "File:", "Image:", ".jpg", ".JPG", ".gif",
+                    ".GIF", ".PNG", ".SVG", ".TIF",
+                    ".png", ".svg", ".tif"]
     text = article.text()
-    return any(pattern in text for pattern in imagepattern)
+    result = any(pattern in text for pattern in imagepattern)
+    return result
+
+
+def latest(article, latest):
+    """ Returns amount of views from the latest days
+
+    Args:
+        article (article): article on which we are querying stats.
+        latest (int): amount of days we are going to fetch
+            values must be 30, 60, or 90
+
+    Returns:
+        int: sum of daily views.
+
+    Raises:
+        ValueError: if latest is not in [30, 60, 90]
+    """
+    if not latest in [30, 60, 90]:
+        raise ValueError("Expected 30, 60 or 90 instead of %s" % (latest))
+    url = GROK_SE_URL.format(article.site.site['lang'],
+                             latest,
+                             article.name.encode('utf-8'))
+    result = requests.get(url).json()
+    if 'daily_views' in result:
+        return sum([result['daily_views'][d] for d in result['daily_views']])
+    else:
+        raise ValueError("grok.se invalid result, missing daily_views")
 
 
 def crawlcategory(language, category):
@@ -26,15 +63,19 @@ def crawlcategory(language, category):
         language (str): language code of wikipedia
         category (str): name of the category to crawl.
     """
-    site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(language)))
+    site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(language)),
+                         clients_useragent=USER_AGENT)
     articles = [a for a in site.Categories[category.decode('utf-8')]]
     noimagearticles = []
-    LOG.info("Found %s articles", len(articles))
+    LOG.info("Found: %s articles", len(articles))
     for article in articles:
-        LOG.debug("Analyzing %s", article.name)
         if not isthereanimage(article):
-            noimagearticles.append(article)
-            LOG.debug("No image found in %s", article.name)
+            noimagearticles.append((article, latest(article, 90)))
+            LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
+    LOG.info("Finished, found %s articles without images out of %s",
+             len(noimagesarticles),
+             len(articles))
+    LOG.debug(noimagearticles)
 
 
 def setuplog():
