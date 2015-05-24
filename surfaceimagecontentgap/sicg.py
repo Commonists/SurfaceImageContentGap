@@ -16,7 +16,7 @@ LOG = logging.getLogger()
 WIKIPEDIA_URL = '{0}.wikipedia.org'
 PROTOCOL = 'https'
 USER_AGENT = 'Bot based on mwclient'
-GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
+GROK_SE_URL = "http://stats.grok.se/json/{0:s}/getlatest{1:d}/{2:s}"
 
 
 def isthereanimage(article):
@@ -30,8 +30,8 @@ def isthereanimage(article):
     return result
 
 
-def latest(article, latest):
-    """ Returns amount of views from the latest days
+def getlatest(article, latest):
+    """ Returns amount of views from the getlatest days
 
     Args:
         article (article): article on which we are querying stats.
@@ -44,7 +44,7 @@ def latest(article, latest):
     Raises:
         ValueError: if latest is not in [30, 60, 90]
     """
-    if not latest in [30, 60, 90]:
+    if latest not in [30, 60, 90]:
         raise ValueError("Expected 30, 60 or 90 instead of %s" % (latest))
     url = GROK_SE_URL.format(article.site.site['lang'],
                              latest,
@@ -70,12 +70,14 @@ def crawlcategory(language, category):
     LOG.info("Found: %s articles", len(articles))
     for article in articles:
         if not isthereanimage(article):
-            noimagearticles.append((article, latest(article, 90)))
+            noimagearticles.append((article, getlatest(article, 90)))
             LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
     LOG.info("Finished, found %s articles without images out of %s",
-             len(noimagesarticles),
+             len(noimagearticles),
              len(articles))
-    LOG.debug(noimagearticles)
+    sorted_result = sorted(noimagearticles,
+                           key=lambda x: x[1])
+    return sorted_result
 
 
 def setuplog():
@@ -111,7 +113,9 @@ def main():
                         required=True,
                         help="Language code for Wikipedia")
     args = parser.parse_args()
-    crawlcategory(args.lang, args.category)
+    result = crawlcategory(args.lang, args.category)
+    for (article, viewcount) in result:
+        print "{0}\t\t{1}".format(article.name, viewcount)
 
 
 if __name__ == '__main__':
