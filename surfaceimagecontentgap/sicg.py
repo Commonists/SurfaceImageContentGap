@@ -84,7 +84,7 @@ def crawlcategory(language, category):
              len(noimagearticles),
              len(articles))
     sorted_result = sorted(noimagearticles,
-                           key=lambda x: x['views'])
+                           key=lambda x: -x['views'])
     return sorted_result
 
 
