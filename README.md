@@ -4,3 +4,16 @@
 [![License](http://img.shields.io/badge/license-MIT-orange.svg?style=flat)](http://opensource.org/licenses/MIT)
 
 R&amp;D project to surface articles that are lacking illustration on Wikipedia
+
+Usage
+-----
+```sh
+python sicg.py -c "French long-distance runners" -w en -r "User:PierreSelim/RunnerReport" -f myconfig.cfg
+```
+
+The configuration file should contain the login and password of your bot to the wikimedia project
+```cfg
+[login]
+user = foo
+password = bar
+```
