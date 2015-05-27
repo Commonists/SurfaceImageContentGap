@@ -20,6 +20,12 @@ def create(articlelist):
 
 
 def save(site, pagename, report):
-    """Save report on the wiki site as pagename."""
+    """Save report on the wiki site as pagename.
+    
+    Args:
+        site (mwclient.Site): wiki to save to
+        pagename (str): name of the page to save the report to
+        report (str): surface image content gap report
+    """
     page = site.Pages[pagename]
     page.save(report, summary='Content gap report')
