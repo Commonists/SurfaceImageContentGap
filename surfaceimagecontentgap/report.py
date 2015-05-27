@@ -21,7 +21,7 @@ def create(articlelist):
 
 def save(site, pagename, report):
     """Save report on the wiki site as pagename.
-    
+
     Args:
         site (mwclient.Site): wiki to save to
         pagename (str): name of the page to save the report to
