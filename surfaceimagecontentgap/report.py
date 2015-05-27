@@ -27,5 +27,5 @@ def save(site, pagename, report):
         pagename (str): name of the page to save the report to
         report (str): surface image content gap report
     """
-    page = site.Pages[pagename]
+    page = site.Pages[pagename.decode('utf-8')]
     page.save(report, summary='Content gap report')
