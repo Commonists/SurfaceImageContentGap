@@ -5,6 +5,7 @@
 
 from ConfigParser import RawConfigParser
 import logging
+import time
 
 import mwclient
 import requests
@@ -20,6 +21,7 @@ WIKIPEDIA_URL = '{0}.wikipedia.org'
 PROTOCOL = 'https'
 USER_AGENT = 'Bot based on mwclient'
 GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
+MAX_TIME_WITHOUT_UPDATE = 600
 
 
 def isthereanimage(article):
@@ -60,18 +62,18 @@ def getlatest(article, latest):
         raise ValueError("grok.se invalid result, missing daily_views")
 
 
-def crawlcategory(language, category):
+def crawlcategory(category, site, reportname):
     """Crawl the category from a given wikipedia.
 
     Args:
-        language (str): language code of wikipedia
         category (str): name of the category to crawl.
+        site (mwclient.Site): site object.
+        reportname (str): name of the report page.
 
     Returns
         list: containing dictionnaries with the article name and the total view
     """
-    site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(language)),
-                         clients_useragent=USER_AGENT)
+    last_update = time.time()  # init to time.time()
     articles = [a for a in site.Categories[category.decode('utf-8')]]
     noimagearticles = []
     LOG.info("Found: %s articles", len(articles))
@@ -80,6 +82,12 @@ def crawlcategory(language, category):
             noimagearticles.append({'name': article.name.encode('utf-8'),
                                     'views': getlatest(article, 90)})
             LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
+            if time.time() - last_update > MAX_TIME_WITHOUT_UPDATE:
+                sorted_result = sorted(noimagearticles,
+                                       key=lambda x: -x['views'])
+                reportcontent = report.create(sorted_result)
+                report.save(site, reportname, reportcontent)
+                last_update = time.time()
     LOG.info("Finished, found %s articles without images out of %s",
              len(noimagearticles),
              len(articles))
@@ -144,24 +152,21 @@ def main():
     parser.add_argument('-r', '--report',
                         type=str,
                         dest='report',
-                        required=False,
-                        default=None,
-                        help='Optional, page name to write a report.')
+                        required=True,
+                        help='Page name to write a report.')
     parser.add_argument('-f', '--configfile',
                         type=str,
                         dest='config',
-                        required=False,
-                        default=None,
-                        help='Optional, config file with login and password.')
+                        required=True,
+                        help='Config file with login and password.')
     args = parser.parse_args()
-    result = crawlcategory(args.lang, args.category)
-    if args.report is not None:
-        conf = readconfig(args.config)
-        site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(args.lang)),
-                             clients_useragent=USER_AGENT)
-        site.login(conf['user'], conf['password'])
-        myreport = report.create(result)
-        report.save(site, args.report, myreport)
+    site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(args.lang)),
+                         clients_useragent=USER_AGENT)
+    conf = readconfig(args.config)
+    site.login(conf['user'], conf['password'])
+    result = crawlcategory(args.category, site, args.report)
+    reportcontent = report.create(result)
+    report.save(site, args.report, reportcontent)
 
 if __name__ == '__main__':
     main()
