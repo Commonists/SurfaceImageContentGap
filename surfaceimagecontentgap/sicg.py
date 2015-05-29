@@ -31,8 +31,7 @@ def isthereanimage(article):
                     ".GIF", ".PNG", ".SVG", ".TIF",
                     ".png", ".svg", ".tif"]
     text = article.text()
-    result = any(pattern in text for pattern in imagepattern)
-    return result
+    return any(pattern in text for pattern in imagepattern)
 
 
 def getlatest(article, latest):
