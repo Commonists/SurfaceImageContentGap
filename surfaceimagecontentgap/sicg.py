@@ -29,7 +29,7 @@ def isthereanimage(article):
     LOG.info("Analyzing: %s", article.name.encode('utf-8'))
     imagepattern = ["<gallery>", "File:", "Image:", ".jpg", ".JPG", ".gif",
                     ".GIF", ".PNG", ".SVG", ".TIF",
-                    ".png", ".svg", ".tif"]
+                    ".png", ".svg", ".tif", ".jpeg", ".JPEG"]
     text = article.text()
     return any(pattern in text for pattern in imagepattern)
 
@@ -87,9 +87,9 @@ def crawlcategory(category, site, reportname):
     LOG.info("Found: %s articles", len(articles))
     for article in articles:
         if not isthereanimage(article):
+            LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
             noimagearticles.append({'name': article.name.encode('utf-8'),
                                     'views': getlatest(article, 90)})
-            LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
             if time.time() - last_update > MAX_TIME_WITHOUT_UPDATE:
                 sortandwritereport(site, reportname, noimagearticles)
                 last_update = time.time()
