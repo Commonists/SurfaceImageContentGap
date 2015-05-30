@@ -61,6 +61,15 @@ def getlatest(article, latest):
         raise ValueError("grok.se invalid result, missing daily_views")
 
 
+def sortandwritereport(site, reportname, result):
+    """Sort results and write it to a report. Returns the sorted result."""
+    sorted_result = sorted(result, key=lambda x: -x['views'])
+    reportcontent = report.create(sorted_result)
+    report.save(site, reportname, reportcontent)
+    LOG.info("Save report to %s", reportname)
+    return sorted_result
+
+
 def crawlcategory(category, site, reportname):
     """Crawl the category from a given wikipedia.
 
@@ -82,17 +91,12 @@ def crawlcategory(category, site, reportname):
                                     'views': getlatest(article, 90)})
             LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
             if time.time() - last_update > MAX_TIME_WITHOUT_UPDATE:
-                sorted_result = sorted(noimagearticles,
-                                       key=lambda x: -x['views'])
-                reportcontent = report.create(sorted_result)
-                report.save(site, reportname, reportcontent)
+                sortandwritereport(site, reportname, noimagearticles)
                 last_update = time.time()
     LOG.info("Finished, found %s articles without images out of %s",
              len(noimagearticles),
              len(articles))
-    sorted_result = sorted(noimagearticles,
-                           key=lambda x: -x['views'])
-    return sorted_result
+    return sortandwritereport(site, reportname, noimagearticles)
 
 
 def readconfig(configname):
@@ -163,9 +167,8 @@ def main():
                          clients_useragent=USER_AGENT)
     conf = readconfig(args.config)
     site.login(conf['user'], conf['password'])
-    result = crawlcategory(args.category, site, args.report)
-    reportcontent = report.create(result)
-    report.save(site, args.report, reportcontent)
+    crawlcategory(args.category, site, args.report)
+
 
 if __name__ == '__main__':
     main()
