@@ -73,7 +73,7 @@ def sortandwritereport(site, reportname, result):
     return sorted_result
 
 
-def searcharticles(category, depth=2):
+def searcharticles(category, depth=1):
     """Search articles in category and its subcategories
     until a given depth."""
     allcontent = [a for a in category]
