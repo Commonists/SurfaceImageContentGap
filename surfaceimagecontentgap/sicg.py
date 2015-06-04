@@ -23,6 +23,9 @@ USER_AGENT = 'Bot based on mwclient'
 GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
 MAX_TIME_WITHOUT_UPDATE = 600
 
+ARTICLE_NAMESPACE = 0
+CATEGORY_NAMEPSACE = 14
+
 
 def isthereanimage(article):
     """ Returns whether there is an image in the article or not."""
@@ -70,6 +73,19 @@ def sortandwritereport(site, reportname, result):
     return sorted_result
 
 
+def searcharticles(category, depth=2):
+    """Search articles in category and its subcategories
+    until a given depth."""
+    allcontent = [a for a in category]
+    articles = [a for a in allcontent if a.namespace == ARTICLE_NAMESPACE]
+    categories = [c for c in allcontent if c.namespace == CATEGORY_NAMEPSACE]
+    LOG.info("Searching for articles into %s", category.name.encode('utf-8'))
+    if depth > 0 and len(categories) > 0:
+        for subcat in categories:
+            articles += searcharticles(subcat, depth - 1)
+    return articles
+
+
 def crawlcategory(category, site, reportname):
     """Crawl the category from a given wikipedia.
 
@@ -77,12 +93,14 @@ def crawlcategory(category, site, reportname):
         category (str): name of the category to crawl.
         site (mwclient.Site): site object.
         reportname (str): name of the report page.
+        depth (int): max recursivity depth
 
     Returns
         list: containing dictionnaries with the article name and the total view
     """
     last_update = time.time()  # init to time.time()
-    articles = [a for a in site.Categories[category.decode('utf-8')]]
+    category = site.Categories[category.decode('utf-8')]
+    articles = searcharticles(category)
     noimagearticles = []
     LOG.info("Found: %s articles", len(articles))
     for article in articles:
