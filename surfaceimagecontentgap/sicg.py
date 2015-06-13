@@ -66,7 +66,13 @@ def getlatest(article, latest):
 
 
 def sortandwritereport(site, reportname, result):
-    """Sort results and write it to a report. Returns the sorted result."""
+    """Sort results and write it to a report. Returns the sorted result.
+
+    Args:
+        site (mwclient.Site): wikipedia site
+        reportname (str): page to save the report to.
+        result (list): list of articles with their last 90 days views.
+    """
     sorted_result = sorted(result, key=lambda x: -x['views'])
     reportcontent = report.create(sorted_result)
     report.save(site, reportname, reportcontent)
@@ -76,7 +82,13 @@ def sortandwritereport(site, reportname, result):
 
 def searcharticles(category, depth=1):
     """Search articles in category and its subcategories
-    until a given depth."""
+    until a given depth.
+
+    Args:
+        category (mwclient.Category): category to search
+        depth (int): how deep should we search (0 means only the category,
+            1 the category and it's sub categories, etc.
+    """
     allcontent = [a for a in category]
     articles = [a for a in allcontent if a.namespace == ARTICLE_NAMESPACE]
     categories = [c for c in allcontent if c.namespace == CATEGORY_NAMEPSACE]
