@@ -13,10 +13,8 @@ import requests
 import report
 
 
-# logger
-LOG = logging.getLogger()
-
 # Constants
+LOGGER_NAME = 'sicglog'
 WIKIPEDIA_URL = '{0}.wikipedia.org'
 PROTOCOL = 'https'
 USER_AGENT = 'Bot based on mwclient'
@@ -25,6 +23,9 @@ MAX_TIME_WITHOUT_UPDATE = 600
 
 ARTICLE_NAMESPACE = 0
 CATEGORY_NAMEPSACE = 14
+
+# logger
+LOG = logging.getLogger(LOGGER_NAME)
 
 
 def isthereanimage(article):
