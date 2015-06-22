@@ -19,6 +19,7 @@ WIKIPEDIA_URL = '{0}.wikipedia.org'
 PROTOCOL = 'https'
 USER_AGENT = 'Bot based on mwclient'
 GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
+GROK_MISSING_DAILY_VIEWS = "grok.se invalid result, missing daily_views"
 MAX_TIME_WITHOUT_UPDATE = 600
 
 ARTICLE_NAMESPACE = 0
@@ -26,6 +27,12 @@ CATEGORY_NAMEPSACE = 14
 
 # logger
 LOG = logging.getLogger(LOGGER_NAME)
+
+
+class MissingDailyViewsException(ValueError):
+
+    """When dail_views is not in the grok response."""
+    pass
 
 
 def isthereanimage(article):
@@ -51,6 +58,7 @@ def getlatest(article, latest):
 
     Raises:
         ValueError: if latest is not in [30, 60, 90]
+        MissingDailyViewsException: if daily_views are missing from response.
     """
     if latest not in [30, 60, 90]:
         raise ValueError("Expected 30, 60 or 90 instead of %s" % (latest))
@@ -62,7 +70,7 @@ def getlatest(article, latest):
     if 'daily_views' in result:
         return sum([result['daily_views'][d] for d in result['daily_views']])
     else:
-        raise ValueError("grok.se invalid result, missing daily_views")
+        raise MissingDailyViewsException(GROK_MISSING_DAILY_VIEWS)
 
 
 def sortandwritereport(site, reportname, result):
