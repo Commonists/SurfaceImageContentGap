@@ -80,7 +80,7 @@ def sortandwritereport(site, reportname, result):
     return sorted_result
 
 
-def searcharticles(category, depth=1):
+def searcharticles(category, depth=0):
     """Search articles in category and its subcategories
     until a given depth.
 
@@ -99,7 +99,7 @@ def searcharticles(category, depth=1):
     return articles
 
 
-def crawlcategory(category, site, reportname):
+def crawlcategory(category, site, reportname, depth=0):
     """Crawl the category from a given wikipedia.
 
     Args:
@@ -113,7 +113,7 @@ def crawlcategory(category, site, reportname):
     """
     last_update = time.time()  # init to time.time()
     category = site.Categories[category.decode('utf-8')]
-    articles = searcharticles(category)
+    articles = searcharticles(category, depth=depth)
     noimagearticles = []
     LOG.info("Found: %s articles", len(articles))
     for article in articles:
@@ -193,6 +193,12 @@ def main():
                         dest='config',
                         required=True,
                         help='Config file with login and password.')
+    parser.add_argument('-d', '--depth',
+                        type=int,
+                        dest='depth',
+                        required=False,
+                        default=0,
+                        help='Depth of search into a category.')
     args = parser.parse_args()
     site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(args.lang)),
                          clients_useragent=USER_AGENT)
