@@ -27,7 +27,12 @@ class ContentGap(object):
 
         Args:
             site (mwclient.Site): Wikipedia to search on.
-            articles (list): List of wikipedia articles
+            articles (list): List of wikipedia articles.
+
+        Attributes:
+            site (mwclient.Site)
+            articles (list)
+            fo
         """
         self.site = site
         self.articles = articles
@@ -61,6 +66,8 @@ class ContentGap(object):
             self.ranked_articles = [
                 {'article': article, 'rank': ranking(article)}
                 for article in self.filtered_articles]
+            self.ranked_articles = sorted(self.ranked_articles,
+                                          key=lambda x: -x['rank'])
         return self.ranked_articles
 
     def reset(self):
