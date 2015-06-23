@@ -26,13 +26,15 @@ class ContentGap(object):
         """Constructor.
 
         Args:
-            site (mwclient.Site): Wikipedia to search on.
+            site (mwclient.Site): Wikipedia site to search on.
             articles (list): List of wikipedia articles.
 
         Attributes:
-            site (mwclient.Site)
-            articles (list)
-            fo
+            site (mwclient.Site): Wikipedia site (i.e. specific language)
+            articles (list): List of Wikipedia Articles
+            filtered_articles (list): Filtered list of articles, None when not
+                filtered.
+            ranked_articles (list): List of articles sorted by rank
         """
         self.site = site
         self.articles = articles
