@@ -3,6 +3,7 @@
 """Content Gap Module provides search and ranking for content gap."""
 
 import logging
+import requests
 
 # Constants
 LOGGER_NAME = 'sicglog'
@@ -20,40 +21,11 @@ CATEGORY_NAMEPSACE = 14
 LOG = logging.getLogger(LOGGER_NAME)
 
 
-def isthereanimage(article):
-    """ Returns whether there is an image in the article or not."""
-    LOG.info("Analyzing: %s", article.name.encode('utf-8'))
-    imagepattern = ["<gallery>", "File:", "Image:", ".jpg", ".JPG", ".gif",
-                    ".GIF", ".PNG", ".SVG", ".TIF",
-                    ".png", ".svg", ".tif", ".jpeg", ".JPEG"]
-    text = article.text()
-    return any(pattern in text for pattern in imagepattern)
-
-
-def searcharticles(category, depth=0):
-    """Search articles in category and its subcategories
-    until a given depth.
-
-    Args:
-        category (mwclient.Category): category to search
-        depth (int): how deep should we search (0 means only the category,
-            1 the category and it's sub categories, etc.
-    """
-    allcontent = [a for a in category]
-    articles = [a for a in allcontent if a.namespace == ARTICLE_NAMESPACE]
-    categories = [c for c in allcontent if c.namespace == CATEGORY_NAMEPSACE]
-    LOG.info("Searching for articles into %s", category.name.encode('utf-8'))
-    if depth > 0 and len(categories) > 0:
-        for subcat in categories:
-            articles += searcharticles(subcat, depth - 1)
-    return articles
-
-
 class ContentGap(object):
 
     """Find content gap from article list."""
 
-    def __init__(self, site, articles, filters=[], ranking=None):
+    def __init__(self, site, articles):
         """Constructor.
 
         Args:
@@ -64,15 +36,29 @@ class ContentGap(object):
                 value. The greater the value, the more important the article
                 is.
         """
+        self.site = site
+        self.articles = articles
+        self.filtered_articles = None
+        self.ranked_articles = None
+
+    def filterarticles(self, filters=[]):
+        """Filters articles based on filter list.
+
+        The filtered articles list is available as filtered_articles attribute.
+
+        Args:
+            filters (list): List of filter function, to apply to the list of
+                articles. A filter returns True to keep an articles."""
+        self.filtered_articles = self.articles
+        for current_filter in filters:
+            self.filtered_articles = [x for x in self.filtered_articles
+                                      if current_filter(x)]
+        return self.articles
+
+    def rankedarticles(self, ranking=None):
         pass
 
-
-class CategoryImageContentGap(ContentGap):
-
-    """Find articles from a category lacking of images"""
-
-    def __init__(self, site, category, depth=0):
-        super(CategoryImageContentGap, self).__init__(site,
-                                                      searcharticles(category, depth=depth),
-                                                      filters=[isthereanimage],
-                                                      ranking=lambda x: 42)
+    def reset(self):
+        """Reset filter and ranking to None."""
+        self.filtered_articles = None
+        self.ranked_articles = None
