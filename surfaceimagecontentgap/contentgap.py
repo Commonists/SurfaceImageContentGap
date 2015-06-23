@@ -3,22 +3,19 @@
 """Content Gap Module provides search and ranking for content gap."""
 
 import logging
-import requests
 
 # Constants
 LOGGER_NAME = 'sicglog'
-WIKIPEDIA_URL = '{0}.wikipedia.org'
-PROTOCOL = 'https'
-USER_AGENT = 'Bot based on mwclient'
-GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
-GROK_MISSING_DAILY_VIEWS = "grok.se invalid result, missing daily_views"
-MAX_TIME_WITHOUT_UPDATE = 600
-
-ARTICLE_NAMESPACE = 0
-CATEGORY_NAMEPSACE = 14
 
 # logger
 LOG = logging.getLogger(LOGGER_NAME)
+
+
+class ArticlesNotFilteredException(Exception):
+
+    """Exception to raise when articles should have been filtered before
+    performing an operation or calling a method."""
+    pass
 
 
 class ContentGap(object):
@@ -30,18 +27,14 @@ class ContentGap(object):
 
         Args:
             site (mwclient.Site): Wikipedia to search on.
-            filters (list): list of filter function to apply to the list of
-                articles
-            ranking (function): function that associate an article to a ranking
-                value. The greater the value, the more important the article
-                is.
+            articles (list): List of wikipedia articles
         """
         self.site = site
         self.articles = articles
         self.filtered_articles = None
         self.ranked_articles = None
 
-    def filterarticles(self, filters=[]):
+    def filterarticles(self, filters=None):
         """Filters articles based on filter list.
 
         The filtered articles list is available as filtered_articles attribute.
@@ -50,13 +43,25 @@ class ContentGap(object):
             filters (list): List of filter function, to apply to the list of
                 articles. A filter returns True to keep an articles."""
         self.filtered_articles = self.articles
+        if filters is None:
+            filters = []
         for current_filter in filters:
             self.filtered_articles = [x for x in self.filtered_articles
                                       if current_filter(x)]
         return self.articles
 
-    def rankedarticles(self, ranking=None):
-        pass
+    def rankarticles(self, ranking=None):
+        """Ranks the articles."""
+        if self.filtered_articles is None:
+            raise ArticlesNotFilteredException
+        if ranking is None:
+            self.ranked_articles = [{'article': article, 'rank': 0}
+                                    for article in self.filtered_articles]
+        else:
+            self.ranked_articles = [
+                {'article': article, 'rank': ranking(article)}
+                for article in self.filtered_articles]
+        return self.ranked_articles
 
     def reset(self):
         """Reset filter and ranking to None."""
