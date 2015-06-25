@@ -41,7 +41,7 @@ class ContentGap(object):
         self.filtered_articles = None
         self.ranked_articles = None
 
-    def filterarticles(self, filters=None):
+    def filter(self, filters=None):
         """Filters articles based on filter list.
 
         The filtered articles list is available as filtered_articles attribute.
@@ -57,20 +57,40 @@ class ContentGap(object):
                                       if current_filter(x)]
         return self.articles
 
-    def rankarticles(self, ranking=None):
-        """Ranks the articles."""
+    def rank(self, evaluation=None):
+        """Ranks the articles according to an evaluation function.
+
+        Args:
+            evaluation (function): Function which gives a evaluation of an
+                article the higher, the better.
+        Returns:
+            list: List of {'article': x, 'evaluation': evaluation(x)}
+        """
         if self.filtered_articles is None:
             raise ArticlesNotFilteredException
-        if ranking is None:
-            self.ranked_articles = [{'article': article, 'rank': 0}
+        if evaluation is None:
+            self.ranked_articles = [{'article': article, 'evaluation': 0}
                                     for article in self.filtered_articles]
         else:
             self.ranked_articles = [
-                {'article': article, 'rank': ranking(article)}
+                {'article': article, 'evaluation': evaluation(article)}
                 for article in self.filtered_articles]
             self.ranked_articles = sorted(self.ranked_articles,
-                                          key=lambda x: -x['rank'])
+                                          key=lambda x: -x['evaluation'])
         return self.ranked_articles
+
+    def filterandrank(self, filters, evaluation, callback):
+        """Filter and ranks article at the same time, and do an action on a
+        callback (such as saving result).
+
+        Args:
+            filters (list): List of filter function, to apply to the list of
+                articles. A filter returns True to keep an articles.
+            evaluation (function): Function which gives a evaluation of an
+                article the higher, the better.
+            callback (dict): {'timer': t, 'function': c} after duration of
+                timer, the callback function is called/"""
+        pass
 
     def reset(self):
         """Reset filter and ranking to None."""
