@@ -3,6 +3,7 @@
 """Content Gap Module provides search and ranking for content gap."""
 
 import logging
+import time
 
 # Constants
 LOGGER_NAME = 'sicglog'
@@ -49,13 +50,13 @@ class ContentGap(object):
         Args:
             filters (list): List of filter function, to apply to the list of
                 articles. A filter returns True to keep an articles."""
-        self.filtered_articles = self.articles
+        self.filtered_articles = []
         if filters is None:
             filters = []
-        for current_filter in filters:
-            self.filtered_articles = [x for x in self.filtered_articles
-                                      if current_filter(x)]
-        return self.articles
+        for article in self.articles:
+            if all(keep(article) for keep in filters):
+                self.filtered_articles.append(article)
+        return self.filtered_articles
 
     def rank(self, evaluation=None):
         """Ranks the articles according to an evaluation function.
@@ -89,8 +90,19 @@ class ContentGap(object):
             evaluation (function): Function which gives a evaluation of an
                 article the higher, the better.
             callback (dict): {'timer': t, 'function': c} after duration of
-                timer, the callback function is called/"""
-        pass
+                timer, the callback function is called."""
+        last_callback = time.time()
+        self.filtered_articles = []
+        for article in self.articles:
+            if all(keep(article) for keep in filters):
+                self.filtered_articles.append(article)
+                if time.time() - last_callback > callback['timer']:
+                    self.ranked_articles = [
+                        {'article': article,
+                         'evaluation': evaluation(article)}
+                        for article in self.filtered_articles]
+                    self.rank(evaluation=evaluation)
+                    callback['function'](self)
 
     def reset(self):
         """Reset filter and ranking to None."""
