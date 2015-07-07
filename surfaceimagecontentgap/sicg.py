@@ -36,7 +36,7 @@ class MissingDailyViewsException(ValueError):
 
 
 def isthereanimage(article):
-    """ Returns whether there is an image in the article or not."""
+    """Returns whether there is an image in the article or not."""
     LOG.info("Analyzing: %s", article.name.encode('utf-8'))
     imagepattern = ["<gallery>", "File:", "Image:", ".jpg", ".JPG", ".gif",
                     ".GIF", ".PNG", ".SVG", ".TIF",
@@ -46,7 +46,7 @@ def isthereanimage(article):
 
 
 def getlatest(article, latest):
-    """ Returns amount of views from the latest days
+    """Returns amount of views from the latest days
 
     Args:
         article (article): article on which we are querying stats.
