@@ -3,9 +3,11 @@
 
 """Image content gap module."""
 
+from ConfigParser import RawConfigParser
 import logging
 
 import requests
+import mwclient
 
 import contentgap
 import report
@@ -65,6 +67,25 @@ def latest90(article):
         raise MissingDailyViewsException(GROK_MISSING_DAILY_VIEWS)
 
 
+def searcharticles(category, depth=0):
+    """Search articles in category and its subcategories
+    until a given depth.
+
+    Args:
+        category (mwclient.Category): category to search
+        depth (int): how deep should we search (0 means only the category,
+            1 the category and it's sub categories, etc.
+    """
+    allcontent = [a for a in category]
+    articles = [a for a in allcontent if a.namespace == ARTICLE_NAMESPACE]
+    categories = [c for c in allcontent if c.namespace == CATEGORY_NAMEPSACE]
+    LOG.info("Searching for articles into %s", category.name.encode('utf-8'))
+    if depth > 0 and len(categories) > 0:
+        for subcat in categories:
+            articles += searcharticles(subcat, depth - 1)
+    return articles
+
+
 class Callback(object):
 
     """Callback for image content gap."""
@@ -106,13 +127,54 @@ def setuplog():
 
 def main():
     """Main script of the image content gap"""
+    from argparse import ArgumentParser
     setuplog()
-    articles = []  # dummy code
-    callback = Callback(600, None, None)
+    description = 'Analyzing Wikipedia to surface image content gap.'
+    parser = ArgumentParser(description=description)
+    parser.add_argument('-c', '--category',
+                        type=str,
+                        dest='category',
+                        required=False,
+                        default='Portail:Informatique théorique/Articles liés',
+                        help='Article category on wikipedia')
+    parser.add_argument('-w', '--wikipedia',
+                        type=str,
+                        dest='lang',
+                        required=True,
+                        help='Language code for Wikipedia')
+    parser.add_argument('-r', '--report',
+                        type=str,
+                        dest='report',
+                        required=True,
+                        help='Page name to write a report.')
+    parser.add_argument('-f', '--configfile',
+                        type=str,
+                        dest='config',
+                        required=True,
+                        help='Config file with login and password.')
+    parser.add_argument('-d', '--depth',
+                        type=int,
+                        dest='depth',
+                        required=False,
+                        default=0,
+                        help='Depth of search into a category.')
+    args = parser.parse_args()
+    site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(args.lang)),
+                         clients_useragent=USER_AGENT)
+    # login to the site
+    configparser = RawConfigParser()
+    configparser.read(args.config)
+    site.login(configparser.get('login', 'user'),
+               configparser.get('login', 'password'))
+    # fetch articles list
+    category = site.Categories[args.category.decode('utf-8')]
+    articles = searcharticles(category)
+    # get the call back
+    callback = Callback(MAX_TIME_WITHOUT_UPDATE, site, args.report)
     gap = contentgap.ContentGap(articles)
     gap.filterandrank([isthereanimage],
                       latest90,
-                      callback)
+                      callback.callback())
 
 if __name__ == '__main__':
     main()
