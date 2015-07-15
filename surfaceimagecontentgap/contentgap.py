@@ -67,11 +67,13 @@ class ContentGap(object):
         if self.filtered_articles is None:
             raise ArticlesNotFilteredException
         if evaluation is None:
-            self.ranked_articles = [{'article': article, 'evaluation': 0}
+            self.ranked_articles = [{'article': article.name.encode('utf-8'),
+                                     'evaluation': 0}
                                     for article in self.filtered_articles]
         else:
             self.ranked_articles = [
-                {'article': article, 'evaluation': evaluation(article)}
+                {'article': article.name.encode('utf-8'),
+                 'evaluation': evaluation(article)}
                 for article in self.filtered_articles]
             self.ranked_articles = sorted(self.ranked_articles,
                                           key=lambda x: -x['evaluation'])
@@ -95,11 +97,13 @@ class ContentGap(object):
                 self.filtered_articles.append(article)
                 if time.time() - last_callback > callback['timer']:
                     self.ranked_articles = [
-                        {'article': article,
+                        {'article': article.name.encode('utf-8'),
                          'evaluation': evaluation(article)}
                         for article in self.filtered_articles]
                     self.rank(evaluation=evaluation)
                     callback['function'](self)
+        self.rank(evaluation=evaluation)
+        callback['function'](self)
 
     def reset(self):
         """Reset filter and ranking to None."""

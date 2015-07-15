@@ -14,8 +14,8 @@ def create(articlelist):
     """
     reportcode = "== Report ==\n"
     for article in articlelist:
-        reportcode += "* [[{0}]] {1}\n".format(article['name'],
-                                               article['views'])
+        reportcode += "* [[{0}]] {1}\n".format(article['article'],
+                                               article['evaluation'])
     return reportcode
 
 
