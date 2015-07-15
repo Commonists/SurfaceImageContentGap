@@ -59,7 +59,7 @@ def latest90(article):
     url = GROK_SE_URL.format(article.site.site['lang'],
                              90,
                              article.name.encode('utf-8'))
-    LOG.debug('\tRequest to %s', url)
+    LOG.info('\tRequest to %s', url)
     result = requests.get(url).json()
     if 'daily_views' in result:
         return sum([result['daily_views'][d] for d in result['daily_views']])
@@ -173,7 +173,7 @@ def main():
     # get the call back
     callback = Callback(MAX_TIME_WITHOUT_UPDATE, site, args.report)
     gap = contentgap.ContentGap(articles)
-    gap.filterandrank([isthereanimage],
+    gap.filterandrank([lambda x: not isthereanimage(x)],
                       latest90,
                       callback.callback())
 

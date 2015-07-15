@@ -96,10 +96,6 @@ class ContentGap(object):
             if all(keep(article) for keep in filters):
                 self.filtered_articles.append(article)
                 if time.time() - last_callback > callback['timer']:
-                    self.ranked_articles = [
-                        {'article': article.name.encode('utf-8'),
-                         'evaluation': evaluation(article)}
-                        for article in self.filtered_articles]
                     self.rank(evaluation=evaluation)
                     callback['function'](self)
         self.rank(evaluation=evaluation)
