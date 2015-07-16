@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Surface image content gap."""
+"""Image content gap module."""
 
 from ConfigParser import RawConfigParser
 import logging
-import time
 
-import mwclient
 import requests
+import mwclient
 
+import contentgap
 import report
-
 
 # Constants
 LOGGER_NAME = 'sicglog'
@@ -45,47 +44,30 @@ def isthereanimage(article):
     return any(pattern in text for pattern in imagepattern)
 
 
-def getlatest(article, latest):
-    """Returns amount of views from the latest days
+def latest90(article):
+    """Returns amount of views from the latest 90 days
 
     Args:
         article (article): article on which we are querying stats.
-        latest (int): amount of days we are going to fetch
-            values must be 30, 60, or 90
 
     Returns:
         int: sum of daily views.
 
     Raises:
-        ValueError: if latest is not in [30, 60, 90]
         MissingDailyViewsException: if daily_views are missing from response.
     """
-    if latest not in [30, 60, 90]:
-        raise ValueError("Expected 30, 60 or 90 instead of %s" % (latest))
+    articlename = article.name.encode('utf-8')
     url = GROK_SE_URL.format(article.site.site['lang'],
-                             latest,
-                             article.name.encode('utf-8'))
-    LOG.debug('\tRequest to %s', url)
+                             90,
+                             articlename)
+    LOG.info('Fetching views on grok.se %s', url)
     result = requests.get(url).json()
     if 'daily_views' in result:
-        return sum([result['daily_views'][d] for d in result['daily_views']])
+        views = sum([result['daily_views'][d]
+                     for d in result['daily_views']])
+        return views
     else:
         raise MissingDailyViewsException(GROK_MISSING_DAILY_VIEWS)
-
-
-def sortandwritereport(site, reportname, result):
-    """Sort results and write it to a report. Returns the sorted result.
-
-    Args:
-        site (mwclient.Site): wikipedia site
-        reportname (str): page to save the report to.
-        result (list): list of articles with their last 90 days views.
-    """
-    sorted_result = sorted(result, key=lambda x: -x['views'])
-    reportcontent = report.create(sorted_result)
-    report.save(site, reportname, reportcontent)
-    LOG.info("Save report to %s", reportname)
-    return sorted_result
 
 
 def searcharticles(category, depth=0):
@@ -107,56 +89,29 @@ def searcharticles(category, depth=0):
     return articles
 
 
-def crawlcategory(category, site, reportname, depth=0):
-    """Crawl the category from a given wikipedia.
+class Callback(object):
 
-    Args:
-        category (str): name of the category to crawl.
-        site (mwclient.Site): site object.
-        reportname (str): name of the report page.
-        depth (int): max recursivity depth
+    """Callback for image content gap."""
 
-    Returns
-        list: containing dictionnaries with the article name and the total view
-    """
-    last_update = time.time()  # init to time.time()
-    category = site.Categories[category.decode('utf-8')]
-    articles = searcharticles(category, depth=depth)
-    noimagearticles = []
-    LOG.info("Found: %s articles", len(articles))
-    for article in articles:
-        if not isthereanimage(article):
-            LOG.info("\tNo image found in: %s", article.name.encode('utf-8'))
-            noimagearticles.append({'name': article.name.encode('utf-8'),
-                                    'views': getlatest(article, 90)})
-            if time.time() - last_update > MAX_TIME_WITHOUT_UPDATE:
-                sortandwritereport(site, reportname, noimagearticles)
-                last_update = time.time()
-    LOG.info("Finished, found %s articles without images out of %s",
-             len(noimagearticles),
-             len(articles))
-    return sortandwritereport(site, reportname, noimagearticles)
+    def __init__(self, timer, site, reportname):
+        """Constructor.
 
+        Args:
+            timer (int): timer in seconds
+            site (mwclient.Site): wikipedia site object the script is running
+                on
+        """
+        self.timer = timer
+        self.site = site
+        self.reportname = reportname
 
-def readconfig(configname):
-    """Read the config file.
-
-    Args:
-        configname (str): configuration file name. Should have section login
-            and entry for user and password.
-
-    Returns:
-        dict: with user and password key.
-
-    Raises:
-        ValueError: when configname is None
-    """
-    if configname is None:
-        raise ValueError('Config file should be provided with -f/--configfile')
-    configparser = RawConfigParser()
-    configparser.read(configname)
-    return {'user': configparser.get('login', 'user'),
-            'password': configparser.get('login', 'password')}
+    def callback(self):
+        """Return the callback as dictionnary."""
+        def callback_function(gap):
+            LOG.info("Saving reports to %s", self.reportname)
+            content = report.create(gap.ranked_articles)  # report content
+            report.save(self.site, self.reportname, content)
+        return {'timer': self.timer, 'function': callback_function}
 
 
 def setuplog():
@@ -175,9 +130,9 @@ def setuplog():
 
 
 def main():
-    """main function."""
-    setuplog()
+    """Main script of the image content gap"""
     from argparse import ArgumentParser
+    setuplog()
     description = 'Analyzing Wikipedia to surface image content gap.'
     parser = ArgumentParser(description=description)
     parser.add_argument('-c', '--category',
@@ -210,10 +165,20 @@ def main():
     args = parser.parse_args()
     site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(args.lang)),
                          clients_useragent=USER_AGENT)
-    conf = readconfig(args.config)
-    site.login(conf['user'], conf['password'])
-    crawlcategory(args.category, site, args.report)
-
+    # login to the site
+    configparser = RawConfigParser()
+    configparser.read(args.config)
+    site.login(configparser.get('login', 'user'),
+               configparser.get('login', 'password'))
+    # fetch articles list
+    category = site.Categories[args.category.decode('utf-8')]
+    articles = searcharticles(category)
+    # get the call back
+    callback = Callback(MAX_TIME_WITHOUT_UPDATE, site, args.report)
+    gap = contentgap.ContentGap(articles)
+    gap.filterandrank([lambda x: not isthereanimage(x)],
+                      latest90,
+                      callback.callback())
 
 if __name__ == '__main__':
     main()

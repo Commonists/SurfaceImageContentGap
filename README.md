@@ -8,7 +8,7 @@ R&amp;D project to surface articles that are lacking illustration on Wikipedia.
 Usage
 -----
 ```sh
-python sicg.py -c "French long-distance runners" -w en \
+python imagegap.py -c "French long-distance runners" -w en \
         -r "User:PierreSelim/RunnerReport" -f myconfig.cfg
 ```
 

@@ -23,21 +23,18 @@ class ContentGap(object):
 
     """Find content gap from article list."""
 
-    def __init__(self, site, articles):
+    def __init__(self, articles):
         """Constructor.
 
         Args:
-            site (mwclient.Site): Wikipedia site to search on.
             articles (list): List of wikipedia articles.
 
         Attributes:
-            site (mwclient.Site): Wikipedia site (i.e. specific language)
             articles (list): List of Wikipedia Articles
             filtered_articles (list): Filtered list of articles, None when not
                 filtered.
             ranked_articles (list): List of articles sorted by rank
         """
-        self.site = site
         self.articles = articles
         self.filtered_articles = None
         self.ranked_articles = None
@@ -70,15 +67,22 @@ class ContentGap(object):
         if self.filtered_articles is None:
             raise ArticlesNotFilteredException
         if evaluation is None:
-            self.ranked_articles = [{'article': article, 'evaluation': 0}
+            self.ranked_articles = [{'article': article.name.encode('utf-8'),
+                                     'evaluation': 0}
                                     for article in self.filtered_articles]
         else:
             self.ranked_articles = [
-                {'article': article, 'evaluation': evaluation(article)}
+                {'article': article.name.encode('utf-8'),
+                 'evaluation': evaluation(article)}
                 for article in self.filtered_articles]
             self.ranked_articles = sorted(self.ranked_articles,
                                           key=lambda x: -x['evaluation'])
         return self.ranked_articles
+
+    @staticmethod
+    def rankingkey(articledict):
+        """Ranking articledict from the greatest 'evaluation' to the lower."""
+        return -articledict['evaluation']
 
     def filterandrank(self, filters, evaluation, callback):
         """Filter and ranks article at the same time, and do an action on a
@@ -93,16 +97,22 @@ class ContentGap(object):
                 timer, the callback function is called."""
         last_callback = time.time()
         self.filtered_articles = []
+        self.ranked_articles = []
         for article in self.articles:
             if all(keep(article) for keep in filters):
                 self.filtered_articles.append(article)
+                articlename = article.name.encode('utf-8')
+                score = evaluation(article)
+                self.ranked_articles.append({'article': articlename,
+                                             'evaluation': score})
                 if time.time() - last_callback > callback['timer']:
-                    self.ranked_articles = [
-                        {'article': article,
-                         'evaluation': evaluation(article)}
-                        for article in self.filtered_articles]
-                    self.rank(evaluation=evaluation)
+                    self.ranked_articles = sorted(self.ranked_articles,
+                                                  key=self.rankingkey)
                     callback['function'](self)
+                    last_callback = time.time()
+        self.ranked_articles = sorted(self.ranked_articles,
+                                      key=self.rankingkey)
+        callback['function'](self)
 
     def reset(self):
         """Reset filter and ranking to None."""
