@@ -7,9 +7,15 @@ R&amp;D project to surface articles that are lacking illustration on Wikipedia.
 
 Usage
 -----
+Searching articles from a given category without picture.
 ```sh
 python imagegap.py -c "French long-distance runners" -w en \
         -r "User:PierreSelim/RunnerReport" -f myconfig.cfg
+```
+Searching articles with a given template without picture
+```sh
+python imagegap.py -t "Infobox Rugbyman" -w en \
+        -r "User:PierreSelim/Rugbyman" -f myconfig.cfg
 ```
 
 The configuration file should contain the login and password of your bot to the wikimedia project
