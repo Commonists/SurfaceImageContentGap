@@ -184,6 +184,7 @@ def main():
                configparser.get('login', 'password'))
     # fetch articles list
     articles = []
+    LOG.info("Start searching articles")
     if args.category is None:
         search = mwtemplate.ArticleWithTemplate(site, args.template)
         articles = search.listarticles()

@@ -4,7 +4,8 @@
 
 import logging
 
-EILIMIT = 5000
+
+import mwclient
 
 LOGGER_NAME = 'sicglog'
 LOG = logging.getLogger(LOGGER_NAME)
@@ -45,6 +46,8 @@ class ArticleWithTemplate(object):
             if 'query-continue' in api_result:
                 has_continue = True
                 eicontinue = self.parse_eicontinue(api_result)
+            else:
+                has_continue = False
         return result
 
     @staticmethod
@@ -56,7 +59,7 @@ class ArticleWithTemplate(object):
         """Returns list of articles from result of api."""
         if 'query' in api_result:
             if 'embeddedin' in api_result['query']:
-                return [self.site.Pages[a['title']]
+                return [mwclient.page.Page(self.site, a['title'])
                         for a in api_result['query']['embeddedin']
                         ]
             else:
