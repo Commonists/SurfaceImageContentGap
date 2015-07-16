@@ -79,6 +79,11 @@ class ContentGap(object):
                                           key=lambda x: -x['evaluation'])
         return self.ranked_articles
 
+    @staticmethod
+    def rankingkey(articledict):
+        """Ranking articledict from the greatest 'evaluation' to the lower."""
+        return -articledict['evaluation']
+
     def filterandrank(self, filters, evaluation, callback):
         """Filter and ranks article at the same time, and do an action on a
         callback (such as saving result).
@@ -92,13 +97,21 @@ class ContentGap(object):
                 timer, the callback function is called."""
         last_callback = time.time()
         self.filtered_articles = []
+        self.ranked_articles = []
         for article in self.articles:
             if all(keep(article) for keep in filters):
                 self.filtered_articles.append(article)
+                articlename = article.name.encode('utf-8')
+                score = evaluation(article)
+                self.ranked_articles.append({'article': articlename,
+                                             'evaluation': score})
                 if time.time() - last_callback > callback['timer']:
-                    self.rank(evaluation=evaluation)
+                    self.ranked_articles = sorted(self.ranked_articles,
+                                                  key=self.rankingkey)
                     callback['function'](self)
-        self.rank(evaluation=evaluation)
+                    last_callback = time.time()
+        self.ranked_articles = sorted(self.ranked_articles,
+                                      key=self.rankingkey)
         callback['function'](self)
 
     def reset(self):

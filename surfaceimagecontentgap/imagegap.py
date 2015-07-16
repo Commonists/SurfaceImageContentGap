@@ -56,13 +56,16 @@ def latest90(article):
     Raises:
         MissingDailyViewsException: if daily_views are missing from response.
     """
+    articlename = article.name.encode('utf-8')
     url = GROK_SE_URL.format(article.site.site['lang'],
                              90,
-                             article.name.encode('utf-8'))
-    LOG.info('\tRequest to %s', url)
+                             articlename)
+    LOG.info('Fetching views on grok.se %s', url)
     result = requests.get(url).json()
     if 'daily_views' in result:
-        return sum([result['daily_views'][d] for d in result['daily_views']])
+        views = sum([result['daily_views'][d]
+                     for d in result['daily_views']])
+        return views
     else:
         raise MissingDailyViewsException(GROK_MISSING_DAILY_VIEWS)
 
