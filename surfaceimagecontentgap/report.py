@@ -13,9 +13,11 @@ def create(articlelist):
         str: wiki code for the report
     """
     reportcode = "== Report ==\n"
+    reportcode += """{| class="wikitable"\n|-\n! Article\n! Views\n"""
     for article in articlelist:
-        reportcode += "* [[{0}]] {1}\n".format(article['article'],
-                                               article['evaluation'])
+        reportcode += "|-\n| [[{0}]]\n| {1}\n".format(article['article'],
+                                                      article['evaluation'])
+    reportcode += "|}\n"
     return reportcode
 
 
