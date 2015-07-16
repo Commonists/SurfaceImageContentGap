@@ -11,6 +11,7 @@ import mwclient
 
 import contentgap
 import report
+import mwtemplate
 
 # Constants
 LOGGER_NAME = 'sicglog'
@@ -139,8 +140,15 @@ def main():
                         type=str,
                         dest='category',
                         required=False,
-                        default='Portail:Informatique théorique/Articles liés',
+                        default=None,
                         help='Article category on wikipedia')
+    parser.add_argument('-t', '--template',
+                        type=str,
+                        dest='template',
+                        required=False,
+                        default=None,
+                        help='Searching for articles including this template'
+                        )
     parser.add_argument('-w', '--wikipedia',
                         type=str,
                         dest='lang',
@@ -163,6 +171,10 @@ def main():
                         default=0,
                         help='Depth of search into a category.')
     args = parser.parse_args()
+    if args.template is None and args.category is None:
+        raise ValueError("Use -t TEMPLATE or -c CATEGORY")
+    if args.template is not None and args.category is not None:
+        raise ValueError("Use only one of -t/-c")
     site = mwclient.Site((PROTOCOL, WIKIPEDIA_URL.format(args.lang)),
                          clients_useragent=USER_AGENT)
     # login to the site
@@ -171,8 +183,14 @@ def main():
     site.login(configparser.get('login', 'user'),
                configparser.get('login', 'password'))
     # fetch articles list
-    category = site.Categories[args.category.decode('utf-8')]
-    articles = searcharticles(category)
+    articles = []
+    LOG.info("Start searching articles")
+    if args.category is None:
+        search = mwtemplate.ArticleWithTemplate(site, args.template)
+        articles = search.listarticles()
+    else:
+        category = site.Categories[args.category.decode('utf-8')]
+        articles = searcharticles(category)
     # get the call back
     callback = Callback(MAX_TIME_WITHOUT_UPDATE, site, args.report)
     gap = contentgap.ContentGap(articles)
