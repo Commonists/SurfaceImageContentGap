@@ -24,24 +24,14 @@ class ArticleWithTemplate(object):
 
     def listarticles(self):
         """List of articles containing a given template."""
-        api_result = self.site.api('query',
-                                   list='embeddedin', rawcontinue='',
-                                   eilimit='max',
-                                   eititle=self.templatename)
-        result = self.parse_result(api_result)
-        has_continue = False
-        eicontinue = ''
-        if 'query-continue' in api_result:
-            has_continue = True
-            eicontinue = self.parse_eicontinue(api_result)
+        result = []
+        has_continue = True
+        eicontinue = None
         while has_continue:
-            LOG.info("continuing template search...size %d %s",
+            LOG.info("Searching for article with template...size %d %s",
                      len(result),
                      eicontinue)
-            api_result = self.site.api('query', eicontinue=eicontinue,
-                                       list='embeddedin', rawcontinue='',
-                                       eilimit='max',
-                                       eititle=self.templatename)
+            api_result = self.queryapi(eicontinue)
             result += self.parse_result(api_result)
             if 'query-continue' in api_result:
                 has_continue = True
@@ -49,6 +39,19 @@ class ArticleWithTemplate(object):
             else:
                 has_continue = False
         return result
+
+    def queryapi(self, eicontinue):
+        """Send the query to wikipedia."""
+        if eicontinue is None:
+            return self.site.api('query',
+                                 list='embeddedin', rawcontinue='',
+                                 eilimit='max',
+                                 eititle=self.templatename)
+        else:
+            return self.site.api('query', eicontinue=eicontinue,
+                                 list='embeddedin', rawcontinue='',
+                                 eilimit='max',
+                                 eititle=self.templatename)
 
     @staticmethod
     def parse_eicontinue(api_result):
