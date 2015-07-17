@@ -66,6 +66,6 @@ class ArticleWithTemplate(object):
                         for a in api_result['query']['embeddedin']
                         ]
             else:
-                []
+                return []
         else:
-            []
+            return []
