@@ -7,8 +7,8 @@ def create(articlelist):
     """Create a report from article list with views
 
     Args:
-        articlelist (list): list of dictionnaries with name and views for
-            each article [{'name': 'Foo', 'views': 42}, ...]
+        articlelist (list): list of dictionnaries with article and evaluation
+            for each article [{'article': 'Foo', 'evaluation': 42}, ...]
     Returns:
         str: wiki code for the report
     """
