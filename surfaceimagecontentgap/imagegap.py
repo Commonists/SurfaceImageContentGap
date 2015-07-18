@@ -109,6 +109,7 @@ class Callback(object):
     def callback(self):
         """Return the callback as dictionnary."""
         def callback_function(gap):
+            """The call back function to call in order to save result."""
             LOG.info("Saving reports to %s", self.reportname)
             content = report.create(gap.ranked_articles)  # report content
             report.save(self.site, self.reportname, content)
