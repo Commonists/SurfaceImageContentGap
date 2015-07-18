@@ -63,8 +63,7 @@ class ArticleWithTemplate(object):
         if 'query' in api_result:
             if 'embeddedin' in api_result['query']:
                 return [mwclient.page.Page(self.site, a['title'])
-                        for a in api_result['query']['embeddedin']
-                        ]
+                        for a in api_result['query']['embeddedin']]
             else:
                 return []
         else:

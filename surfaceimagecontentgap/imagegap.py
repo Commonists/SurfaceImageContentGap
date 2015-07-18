@@ -147,8 +147,7 @@ def main():
                         dest='template',
                         required=False,
                         default=None,
-                        help='Searching for articles including this template'
-                        )
+                        help='Searching for articles including this template')
     parser.add_argument('-w', '--wikipedia',
                         type=str,
                         dest='lang',
