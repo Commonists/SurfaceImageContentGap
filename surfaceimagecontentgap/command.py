@@ -44,6 +44,12 @@ class SicgCommand(object):
         """Return whether the command is authorized given a list of users."""
         return self.user in authorized_users
 
+    @classmethod
+    def fromtext(cls, text):
+        """Command from file format used in command_file."""
+        fields = [textfield.strip() for textfield in text.split(";;;")]
+        return cls(fields[1], fields[2], fields[3])
+
     def __repr__(self):
         """Representation."""
         repr_message = "<SicgCommand object %s cmd: %s by %s at %s>"
