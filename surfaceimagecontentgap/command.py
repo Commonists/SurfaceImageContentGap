@@ -14,13 +14,15 @@ class SicgCommand(object):
 
     """Command to sicg bot."""
 
-    def __init__(self, user, command, argname):
+    def __init__(self, user, command, argname, date_time=None):
         """Constructor.
 
         Args:
             user (str): user name that sends the Command
             command (str): command type. Should be in ALLOWED_TYPES
             name (str): argument of the command (e.g. category or template)
+            date_time (optional:datetime.datetime): creation date of the
+                command
         """
         if command not in ALLOWED_TYPES:
             msg = "Command value should be in %s, was %s" % (ALLOWED_TYPES,
@@ -29,7 +31,10 @@ class SicgCommand(object):
         self.user = user
         self.command = command
         self.argname = argname
-        self.datetime = datetime.datetime.now()
+        if date_time is None:
+            self.datetime = datetime.datetime.now()
+        else:
+            self.datetime = date_time
 
     def send(self, filename):
         """Send command to queue file."""
@@ -48,7 +53,7 @@ class SicgCommand(object):
     def fromtext(cls, text):
         """Command from file format used in command_file."""
         fields = [textfield.strip() for textfield in text.split(";;;")]
-        return cls(fields[1], fields[2], fields[3])
+        return cls(fields[1], fields[2], fields[3], date_time=fields[0])
 
     def __repr__(self):
         """Representation."""
