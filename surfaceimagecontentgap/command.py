@@ -64,9 +64,9 @@ class SicgCommand(object):
                                self.datetime)
 
 
-class SicgScheduler(object):
+class SicgExecutableObject(object):
 
-    """Scheduler class."""
+    """Object containing information to run the bot."""
 
     def __init__(self, configfile):
         """Constructor."""
@@ -76,13 +76,36 @@ class SicgScheduler(object):
         self.user_file = os.path.join(self.path, "users.txt")
         self.command_file = os.path.join(self.path, "commands.txt")
         self.log_file = os.path.join(self.path, "log.txt")
-        self.users = []
-        with open(self.user_file) as userfile:
-            self.users = [line.strip() for line in userfile.readlines()]
+        self.userlist = None
+
+    def users(self):
+        """List of users that are authorized to use the bot.
+
+        As the user list should not change so much we are caching it."""
+        if self.userlist is None:
+            with open(self.user_file) as userfile:
+                self.userlist = [line.strip()
+                                 for line in userfile.readlines()]
+        return self.userlist
+
+    def commands(self):
+        """List of commands on the command file."""
+        with open(self.command_file) as commandfile:
+            return [SicgCommand.fromtext(line.strip())
+                    for line in commandfile.readlines()]
+
+
+class SicgScheduler(SicgExecutableObject):
+
+    """Scheduler class."""
+
+    def __init__(self, configfile):
+        """Constructor."""
+        SicgExecutableObject.__init__(self, configfile)
 
     def addcommand(self, command):
         """Add a command to the command file."""
-        if command.check(self.users):
+        if command.check(self.users()):
             command.send(self.command_file)
 
     def runnext(self):
