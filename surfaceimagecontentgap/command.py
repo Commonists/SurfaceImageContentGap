@@ -36,14 +36,12 @@ class SicgCommand(object):
         else:
             self.datetime = date_time
 
-    def send(self, filename):
-        """Send command to queue file."""
-        with open(filename, "a") as commandfile:
-            msg = ";;;".join([str(self.datetime),
-                              self.user,
-                              self.command,
-                              self.argname])
-            commandfile.write(msg + "\n")
+    def textformat(self):
+        """String format of command file."""
+        return ";;;".join([str(self.datetime),
+                           self.user,
+                           self.command,
+                           self.argname])
 
     def check(self, authorized_users):
         """Return whether the command is authorized given a list of users."""
@@ -57,7 +55,7 @@ class SicgCommand(object):
 
     def __repr__(self):
         """Representation."""
-        repr_message = "<SicgCommand object %s cmd: %s by %s at %s>"
+        repr_message = "<SicgCommand object %s  (%s by %s at %s)>"
         return repr_message % (id(self),
                                self.command,
                                self.user,
@@ -94,6 +92,17 @@ class SicgExecutableObject(object):
             return [SicgCommand.fromtext(line.strip())
                     for line in commandfile.readlines()]
 
+    def appendcommand(self, command):
+        """Write command to command file."""
+        with open(self.command_file, "a") as commandfile:
+            commandfile.write(command.textformat() + "\n")
+
+    def writecommands(self, commands):
+        """Write commands to command file"""
+        with open(self.command_file) as commandfile:
+            lines = [command.textformat() for command in commands]
+            commandfile.write("\n".join(lines) + "\n")
+
 
 class SicgScheduler(SicgExecutableObject):
 
@@ -106,8 +115,16 @@ class SicgScheduler(SicgExecutableObject):
     def addcommand(self, command):
         """Add a command to the command file."""
         if command.check(self.users()):
-            command.send(self.command_file)
+            self.appendcommand(command)
+
+    def pop(self):
+        """Pop first command from command file."""
+        commandlist = self.commands()
+        command = commandlist.pop(0)
+        self.writecommands(commandlist)
+        return command
 
     def runnext(self):
         """Run the first command from the file and removes it from the file."""
-        pass
+        commandlist = self.commands()
+        print commandlist[0]
