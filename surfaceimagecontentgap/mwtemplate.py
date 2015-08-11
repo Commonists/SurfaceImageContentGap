@@ -30,12 +30,6 @@ class ArticleWithTemplate(object):
                                                    title=self.templatename,
                                                    namespace=0))
         gen = listing.List(self.site, 'embeddedin', 'ei', **kwargs)
-        articles = []
         for info in gen:
             titlename = info['title']
-            articles.append(mwclient.page.Page(self.site, titlename))
-            if len(articles) % 100 == 0:
-                LOG.info("Fetch %d articles with template %s",
-                         len(articles),
-                         self.templatename)
-        return articles
+            yield mwclient.page.Page(self.site, titlename)
