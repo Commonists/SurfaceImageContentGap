@@ -25,8 +25,10 @@ class ArticleWithTemplate(object):
 
     def listarticles(self):
         """List of articles containing a given template."""
+        # list only namespace 0 for wikipedia articles namespace
         kwargs = dict(listing.List.generate_kwargs('ei', prop='title',
-                                                   title=self.templatename))
+                                                   title=self.templatename,
+                                                   namespace=0))
         gen = listing.List(self.site, 'embeddedin', 'ei', **kwargs)
         articles = []
         for info in gen:
