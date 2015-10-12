@@ -118,3 +118,14 @@ class ContentGap(object):
         """Reset filter and ranking to None."""
         self.filtered_articles = None
         self.ranked_articles = None
+
+    def metadata(self):
+        """Informations about the number of articles and filtered articles."""
+        len_articles = 0
+        if self.articles:
+            len_articles = len(self.articles)
+        len_filtered_articles = 0
+        if self.filtered_articles:
+            len_filtered_articles = len(self.filtered_articles)
+        return {'articles': len_articles,
+                'filtered': len_filtered_articles}
