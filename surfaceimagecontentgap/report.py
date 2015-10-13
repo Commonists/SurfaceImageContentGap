@@ -3,12 +3,14 @@
 """Reports for image content gap."""
 
 
-def create(articlelist):
+def create(articlelist, articles=None, filtered_articles=None):
     """Create a report from article list with views
 
     Args:
         articlelist (list): list of dictionnaries with article and evaluation
             for each article [{'article': 'Foo', 'evaluation': 42}, ...]
+        articles (optional: int): number of articles to process
+        filtered_articles (optional: int): number of articles filtered
     Returns:
         str: wiki code for the report
     """
@@ -18,6 +20,10 @@ def create(articlelist):
         reportcode += "|-\n| [[{0}]]\n| {1}\n".format(article['article'],
                                                       article['evaluation'])
     reportcode += "|}\n"
+    if articles and filtered_articles:
+        reportcode += "== Data ==\n"
+        reportcode += "* total articles: %d\n" % articles
+        reportcode += "* filtered articles: %d\n" % filtered_articles
     return reportcode
 
 

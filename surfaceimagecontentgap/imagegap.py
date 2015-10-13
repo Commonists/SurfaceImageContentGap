@@ -111,7 +111,10 @@ class Callback(object):
         def callback_function(gap):
             """The call back function to call in order to save result."""
             LOG.info("Saving reports to %s", self.reportname)
-            content = report.create(gap.ranked_articles)  # report content
+            info = gap.metadata()
+            content = report.create(gap.ranked_articles,
+                                    articles=info['articles'],
+                                    filtered_articles=info['filtered'])
             report.save(self.site, self.reportname, content)
         return {'timer': self.timer, 'function': callback_function}
 
