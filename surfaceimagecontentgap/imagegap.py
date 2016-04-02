@@ -6,20 +6,19 @@
 from ConfigParser import RawConfigParser
 import logging
 
-import requests
 import mwclient
 
 import contentgap
 import report
 import mwtemplate
 
+import pageviewapi.period
+
 # Constants
 LOGGER_NAME = 'sicglog'
 WIKIPEDIA_URL = '{0}.wikipedia.org'
 PROTOCOL = 'https'
 USER_AGENT = 'Bot based on mwclient'
-GROK_SE_URL = "http://stats.grok.se/json/{0:s}/latest{1:d}/{2:s}"
-GROK_MISSING_DAILY_VIEWS = "grok.se invalid result, missing daily_views"
 MAX_TIME_WITHOUT_UPDATE = 600
 
 ARTICLE_NAMESPACE = 0
@@ -53,22 +52,13 @@ def latest90(article):
 
     Returns:
         int: sum of daily views.
-
-    Raises:
-        MissingDailyViewsException: if daily_views are missing from response.
     """
-    articlename = article.name.encode('utf-8')
-    url = GROK_SE_URL.format(article.site.site['lang'],
-                             90,
-                             articlename)
-    LOG.info('Fetching views on grok.se %s', url)
-    result = requests.get(url).json()
-    if 'daily_views' in result:
-        views = sum([result['daily_views'][d]
-                     for d in result['daily_views']])
-        return views
-    else:
-        raise MissingDailyViewsException(GROK_MISSING_DAILY_VIEWS)
+    project = '{lang}.wikipedia'.format(lang=article.site.site['lang'])
+    return pageviewapi.period.sum_last(project,
+                                       article.name.encode('utf-8'),
+                                       last=90,
+                                       access='all-access',
+                                       agent='all-agents')
 
 
 def searcharticles(category, depth=0):
