@@ -1,5 +1,6 @@
 # SurfaceImageContentGap
 [![Build Status](https://travis-ci.org/Commonists/SurfaceImageContentGap.svg?branch=master)](https://travis-ci.org/Commonists/SurfaceImageContentGap)
+[![Coverage Status](https://codecov.io/github/Commonists/SurfaceImageContentGap/coverage.svg?branch=master)](https://codecov.io/github/Commonists/SurfaceImageContentGap?branch=master)
 [![Code Health](https://landscape.io/github/Commonists/SurfaceImageContentGap/master/landscape.svg?style=flat)](https://landscape.io/github/Commonists/SurfaceImageContentGap/master)
 [![License](http://img.shields.io/badge/license-MIT-orange.svg?style=flat)](http://opensource.org/licenses/MIT)
 
