@@ -11,6 +11,7 @@ class MockArticle(object):
     def __init__(self, name="", text=""):
         self.__text__ = text
         self.name = name
+
     def text(self):
         return self.__text__
 
