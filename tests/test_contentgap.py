@@ -14,5 +14,6 @@ class Test(unittest.TestCase):
         gap = contentgap.ContentGap([])
         self.assertEqual(gap.articles, [])
 
+
 if __name__ == "__main__":
     unittest.main()
