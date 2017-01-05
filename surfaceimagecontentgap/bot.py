@@ -57,6 +57,9 @@ class SurfaceContentGapBot(object):
         self.config_file = config_file
         self.__is_logged__ = False
 
+        # Language
+        self.lang = lang
+
         # Report page
         self.report = report
 
